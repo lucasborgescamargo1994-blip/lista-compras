@@ -104,27 +104,31 @@
         }
     }
 
-    function enviarWhatsApp() {
-        if (listaItens.length === 0) { alert("Sua lista está vazia!"); return; }
-        
-        const mercado = document.getElementById('mercado-nome').value.trim() || "Mercado";
-        let texto = `🛒 *LISTA DE COMPRAS - ${mercado.toUpperCase()}*\n\n`;
-        
-        listaItens.forEach(it => {
-            texto += `• ${it.nome}\n`;
-        });
+function enviarWhatsApp() {
+    if (listaItens.length === 0) { alert("Sua lista está vazia!"); return; }
+    
+    const mercado = document.getElementById('mercado-nome').value.trim() || "Mercado";
+    
+    // 1. Cabeçalho da mensagem
+    let texto = `🛒 *LISTA DE COMPRAS - ${mercado.toUpperCase()}*\n\n`;
+    
+    // 2. Itens da lista (apenas os nomes)
+    listaItens.forEach(it => {
+        texto += `• ${it.nome}\n`;
+    });
 
-        // Gerar link para o app (Substitua pela URL real onde o app estiver hospedado)
-        // Se você usar Web2APK, pode colocar o link da sua página web aqui.
-        const baseUrl = window.location.href.split('?')[0];
-        const dadosCompactados = btoa(JSON.stringify(listaItens));
-        const linkApp = `${baseUrl}?importar=${dadosCompactados}`;
-        
-        texto += `\n🔗 *Abrir no App:* ${linkApp}`;
+    // 3. Gerar o link de importação
+    const baseUrl = window.location.href.split('?')[0];
+    const dadosCompactados = btoa(JSON.stringify(listaItens));
+    const linkApp = `${baseUrl}?importar=${dadosCompactados}`;
+    
+    // 4. Texto de chamada para ação (Call to Action)
+    texto += `\n👇 *CLIQUE NO LINK ABAIXO PARA ABRIR SUA LISTA NO APLICATIVO:* \n${linkApp}`;
 
-        const urlWpp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
-        window.open(urlWpp, '_blank');
-    }
+    // 5. Abrir o WhatsApp
+    const urlWpp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
+    window.open(urlWpp, '_blank');
+}
 
     function buscarPrecoAntigo(nomeProduto) {
         var termo = nomeProduto.toLowerCase().trim();
@@ -247,3 +251,4 @@
 </body>
 
 </html>
+
