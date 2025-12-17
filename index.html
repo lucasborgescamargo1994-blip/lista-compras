@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minhas Compras Inteligente</title>
+    <style>
+        :root { --primary: #2e7d32; --secondary: #1565c0; --bg: #f8f9fa; --white: #ffffff; --danger: #d32f2f; --whatsapp: #25d366; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); padding-bottom: 160px; color: #333; }
+        
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; }
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .card { background: var(--white); border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+
+        label { font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; outline: none; }
+        
+        .btn-add { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .mercado-box { background: #e3f2fd; border: 1px dashed #90caf9; }
+
+        .item-row { background: var(--white); padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .item-info { flex: 1; padding-right: 5px; }
+        .item-info b { display: block; font-size: 1.05em; text-transform: capitalize; }
+        .item-info small { display: block; color: var(--danger); font-size: 0.75em; margin-top: 2px; }
+        
+        .price-box { display: flex; align-items: center; background: #e8f5e9; padding: 5px 10px; border-radius: 6px; width: 95px; border: 1px solid #c8e6c9; }
+        .input-price { background: transparent; border: none; width: 100%; text-align: right; font-weight: bold; color: var(--primary); padding: 0; font-size: 1.1em; outline: none; }
+
+        .btn-del { background: #ffebee; color: var(--danger); border: none; width: 32px; height: 32px; border-radius: 50%; margin-left: 10px; font-weight: bold; }
+
+        .footer { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 12px 20px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; z-index: 100; }
+        .footer-top { display: flex; justify-content: space-between; align-items: center; }
+        .total-val { font-size: 1.5em; font-weight: bold; color: var(--primary); }
+        
+        .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-finish { background: var(--secondary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; }
+        .btn-share { background: var(--whatsapp); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; }
+
+        #modal-hist { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 200; overflow-y: auto; }
+        .hist-header { padding: 15px; background: #f5f5f5; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body onload="verificarListaRecebida()">
+
+<div class="header">
+    <h2 style="margin:0; font-size: 1.2em;">🛒 Lista de Compras</h2>
+</div>
+
+<div class="container">
+    <div class="card">
+        <label>O que você está pegando?</label>
+        <input type="text" id="prod-nome" placeholder="Ex: Arroz 5kg, Feijão, etc.">
+        <button type="button" class="btn-add" onclick="adicionarItem()">ADICIONAR À LISTA</button>
+    </div>
+
+    <div class="card mercado-box">
+        <label style="color: var(--secondary);">Local da Compra (Mercado)</label>
+        <input type="text" id="mercado-nome" placeholder="Ex: Supermercado Central" style="margin-bottom:0; border-color: #90caf9;">
+    </div>
+
+    <div id="lista-corpo"></div>
+</div>
+
+<div class="footer">
+    <div class="footer-top">
+        <button onclick="abrirHist()" style="padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; background: #f5f5f5; font-weight: bold; font-size: 13px;">📜 HISTÓRICO</button>
+        <div class="total-val" id="total-txt">R$ 0,00</div>
+    </div>
+    <div class="actions-grid">
+        <button class="btn-share" onclick="enviarWhatsApp()">📤 ENVIAR LISTA</button>
+        <button class="btn-finish" onclick="finalizarCompra()">✅ FINALIZAR</button>
+    </div>
+</div>
+
+<div id="modal-hist">
+    <div class="hist-header">
+        <h3 style="margin:0">📜 Histórico</h3>
+        <button onclick="fecharHist()" style="padding: 8px 15px; border-radius: 5px; border: 1px solid #999; background: #fff;">VOLTAR</button>
+    </div>
+    <div id="hist-lista" style="padding: 15px;"></div>
+</div>
+
+<script>
+    var listaItens = [];
+    var historicoCompras = JSON.parse(localStorage.getItem('minhasComprasHist')) || [];
+
+    // Lógica para carregar lista enviada por link
+    function verificarListaRecebida() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const dadosBase64 = urlParams.get('importar');
+        if (dadosBase64) {
+            if (confirm("Você recebeu uma nova lista de compras. Deseja carregá-la agora?")) {
+                try {
+                    const dadosDecodificados = JSON.parse(atob(dadosBase64));
+                    listaItens = dadosDecodificados;
+                    renderizar();
+                    // Limpa a URL para não carregar de novo ao atualizar
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } catch (e) {
+                    alert("Erro ao carregar a lista enviada.");
+                }
+            }
+        }
+    }
+
+    function enviarWhatsApp() {
+        if (listaItens.length === 0) { alert("Sua lista está vazia!"); return; }
+        
+        const mercado = document.getElementById('mercado-nome').value.trim() || "Mercado";
+        let texto = `🛒 *LISTA DE COMPRAS - ${mercado.toUpperCase()}*\n\n`;
+        
+        listaItens.forEach(it => {
+            texto += `• ${it.nome}\n`;
+        });
+
+        // Gerar link para o app (Substitua pela URL real onde o app estiver hospedado)
+        // Se você usar Web2APK, pode colocar o link da sua página web aqui.
+        const baseUrl = window.location.href.split('?')[0];
+        const dadosCompactados = btoa(JSON.stringify(listaItens));
+        const linkApp = `${baseUrl}?importar=${dadosCompactados}`;
+        
+        texto += `\n🔗 *Abrir no App:* ${linkApp}`;
+
+        const urlWpp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
+        window.open(urlWpp, '_blank');
+    }
+
+    function buscarPrecoAntigo(nomeProduto) {
+        var termo = nomeProduto.toLowerCase().trim();
+        for (var i = historicoCompras.length - 1; i >= 0; i--) {
+            var compra = historicoCompras[i];
+            for (var j = 0; j < compra.itens.length; j++) {
+                if (compra.itens[j].nome.toLowerCase().trim() === termo) {
+                    return { preco: compra.itens[j].preco, mercado: compra.mercado };
+                }
+            }
+        }
+        return null;
+    }
+
+    function adicionarItem() {
+        var input = document.getElementById('prod-nome');
+        var nome = input.value.trim();
+        if(!nome) return;
+
+        var referencia = buscarPrecoAntigo(nome);
+        var dicaTexto = "";
+        if (referencia && referencia.preco > 0) {
+            dicaTexto = "Antigo: R$ " + parseFloat(referencia.preco).toFixed(2).replace('.', ',') + " (" + referencia.mercado + ")";
+        }
+
+        listaItens.unshift({ id: Date.now(), nome: nome, preco: "", dica: dicaTexto });
+        input.value = "";
+        renderizar();
+    }
+
+    function renderizar() {
+        var html = "";
+        for(var i=0; i < listaItens.length; i++) {
+            var item = listaItens[i];
+            html += '<div class="item-row">' +
+                        '<div class="item-info">' +
+                            '<b>' + item.nome + '</b>' +
+                            (item.dica ? '<small>' + item.dica + '</small>' : '') +
+                        '</div>' +
+                        '<div class="price-box">' +
+                            '<span>R$</span>' +
+                            '<input type="tel" class="input-price" value="' + item.preco + '" placeholder="0,00" oninput="mudarPreco(' + item.id + ', this.value)">' +
+                        '</div>' +
+                        '<button class="btn-del" onclick="remover(' + item.id + ')">×</button>' +
+                    '</div>';
+        }
+        document.getElementById('lista-corpo').innerHTML = html;
+        atualizarTotal();
+    }
+
+    function mudarPreco(id, valor) {
+        for(var i=0; i < listaItens.length; i++) {
+            if(listaItens[i].id === id) {
+                listaItens[i].preco = valor.replace(',', '.');
+                break;
+            }
+        }
+        atualizarTotal();
+    }
+
+    function remover(id) {
+        listaItens = listaItens.filter(function(i) { return i.id !== id; });
+        renderizar();
+    }
+
+    function atualizarTotal() {
+        var total = 0;
+        for(var i=0; i < listaItens.length; i++) {
+            total += parseFloat(listaItens[i].preco) || 0;
+        }
+        document.getElementById('total-txt').innerText = "R$ " + total.toFixed(2).replace('.', ',');
+    }
+
+    function finalizarCompra() {
+        var mercado = document.getElementById('mercado-nome').value.trim();
+        if(!mercado) { alert("Preencha o nome do mercado!"); return; }
+        if(listaItens.length === 0) { alert("Lista vazia!"); return; }
+
+        var total = 0;
+        for(var i=0; i < listaItens.length; i++) { total += parseFloat(listaItens[i].preco) || 0; }
+
+        historicoCompras.push({
+            mercado: mercado,
+            data: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString().slice(0,5),
+            itens: JSON.parse(JSON.stringify(listaItens)),
+            total: total
+        });
+
+        localStorage.setItem('minhasComprasHist', JSON.stringify(historicoCompras));
+        listaItens = [];
+        document.getElementById('mercado-nome').value = "";
+        renderizar();
+        alert("Compra salva no histórico!");
+    }
+
+    function abrirHist() {
+        document.getElementById('modal-hist').style.display = 'block';
+        var container = document.getElementById('hist-lista');
+        if (historicoCompras.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color:#999; margin-top:50px;'>Histórico vazio.</p>";
+            return;
+        }
+        var html = '<button style="background:#d32f2f; color:white; border:none; padding:10px; width:100%; border-radius:8px; margin-bottom:15px;" onclick="limparHistorico()">⚠️ APAGAR TUDO</button>';
+        for(var i = historicoCompras.length -1; i >= 0; i--) {
+            var c = historicoCompras[i];
+            html += `<div class="hist-card" style="border: 1px solid #eee; padding:10px; border-radius:10px; margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; color:#666;">
+                            <strong>${c.mercado}</strong><span>${c.data}</span>
+                        </div>
+                        <div style="margin-top:5px; font-size:13px;">${c.itens.map(it => it.nome).join(', ')}</div>
+                        <div style="text-align:right; font-weight:bold; color:green; margin-top:5px;">R$ ${c.total.toFixed(2).replace('.',',')}</div>
+                    </div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    function fecharHist() { document.getElementById('modal-hist').style.display = 'none'; }
+    function limparHistorico() { if(confirm("Apagar tudo?")) { historicoCompras = []; localStorage.removeItem('minhasComprasHist'); abrirHist(); } }
+</script>
+</body>
+</html>
