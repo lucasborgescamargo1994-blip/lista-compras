@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Minhas Compras Inteligente</title>
+    <title>Lista de Compras Inteligente</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="favicon.ico">
     
     <style>
         :root { --primary: #2e7d32; --secondary: #1565c0; --bg: #f8f9fa; --white: #ffffff; --danger: #d32f2f; --whatsapp: #25d366; }
-        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); padding-bottom: 165px; color: #333; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); padding-bottom: 170px; color: #333; }
         
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 600px; margin: auto; }
@@ -18,24 +18,25 @@
         label { font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 5px; display: block; }
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; outline: none; }
         
-        .btn-add { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .btn-add { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: opacity 0.2s; }
+        .btn-add:active { opacity: 0.8; }
 
         .mercado-box { background: #e3f2fd; border: 1px dashed #90caf9; }
 
-        /* Lista de Itens Atuais */
-        .item-row { background: var(--white); padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .item-row { background: var(--white); padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
         .item-info { flex: 1; padding-right: 5px; }
         .item-info b { display: block; font-size: 1.05em; text-transform: capitalize; color: #1a1a1a; }
-        .item-info small { display: block; color: var(--danger); font-size: 0.75em; margin-top: 2px; font-weight: 500; }
+        .item-info small { display: block; color: var(--danger); font-size: 0.78em; margin-top: 3px; font-weight: 600; }
         
-        .price-box { display: flex; align-items: center; background: #e8f5e9; padding: 5px 10px; border-radius: 6px; width: 95px; border: 1px solid #c8e6c9; }
+        .price-box { display: flex; align-items: center; background: #e8f5e9; padding: 5px 10px; border-radius: 6px; width: 100px; border: 1px solid #c8e6c9; }
         .price-box span { color: var(--primary); font-weight: bold; margin-right: 3px; font-size: 0.9em; }
         .input-price { background: transparent; border: none; width: 100%; text-align: right; font-weight: bold; color: var(--primary); margin-bottom: 0 !important; padding: 0; font-size: 1.1em; outline: none; }
 
-        .btn-del { background: #ffebee; color: var(--danger); border: none; width: 32px; height: 32px; border-radius: 50%; margin-left: 10px; font-weight: bold; }
+        .btn-del { background: #ffebee; color: var(--danger); border: none; width: 32px; height: 32px; border-radius: 50%; margin-left: 10px; font-weight: bold; font-size: 18px; cursor: pointer; }
 
-        /* Rodapé e Botões */
-        .footer { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 12px 20px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; z-index: 100; }
+        .footer { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 12px 20px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
         .footer-top { display: flex; justify-content: space-between; align-items: center; }
         .total-val { font-size: 1.6em; font-weight: bold; color: var(--primary); }
         
@@ -43,32 +44,32 @@
         .btn-finish { background: var(--secondary); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; }
         .btn-share { background: var(--whatsapp); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; }
 
-        /* Modal Histórico Detalhado */
+        /* Estilo Histórico Detalhado */
         #modal-hist { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 200; overflow-y: auto; }
         .hist-header { padding: 15px; background: #f5f5f5; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; border-bottom: 1px solid #ddd; z-index: 10; }
         .hist-card { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .hist-item-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dotted #eee; font-size: 14px; }
+        .hist-item-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dotted #eee; font-size: 14px; }
         .hist-item-name { color: #555; text-transform: capitalize; }
-        .hist-item-price { font-weight: 600; color: #333; }
-        .btn-clear { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; margin-bottom: 20px; }
+        .hist-item-price { font-weight: 700; color: #222; }
+        .btn-clear { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; margin-bottom: 20px; cursor: pointer; }
     </style>
 </head>
 <body onload="verificarListaRecebida()">
 
 <div class="header">
-    <h2 style="margin:0; font-size: 1.2em;">🛒 Lista de Compras</h2>
+    <h2 style="margin:0; font-size: 1.2em; letter-spacing: 0.5px;">🛒 Lista de Compras</h2>
 </div>
 
 <div class="container">
     <div class="card">
         <label>O que você está pegando?</label>
-        <input type="text" id="prod-nome" placeholder="Ex: Arroz 5kg, Feijão, etc.">
+        <input type="text" id="prod-nome" placeholder="Ex: Arroz 5kg, Leite..." autocomplete="off">
         <button type="button" class="btn-add" onclick="adicionarItem()">ADICIONAR À LISTA</button>
     </div>
 
     <div class="card mercado-box">
         <label style="color: var(--secondary);">Local da Compra (Mercado)</label>
-        <input type="text" id="mercado-nome" placeholder="Ex: Supermercado Central" style="margin-bottom:0; border-color: #90caf9;">
+        <input type="text" id="mercado-nome" placeholder="Ex: Mercadão do Bairro" style="margin-bottom:0; border-color: #90caf9;">
     </div>
 
     <div id="lista-corpo"></div>
@@ -76,7 +77,7 @@
 
 <div class="footer">
     <div class="footer-top">
-        <button onclick="abrirHist()" style="padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; background: #f5f5f5; font-weight: bold; font-size: 13px;">📜 HISTÓRICO</button>
+        <button onclick="abrirHist()" style="padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; background: #f5f5f5; font-weight: bold; font-size: 13px; cursor: pointer;">📜 HISTÓRICO</button>
         <div class="total-val" id="total-txt">R$ 0,00</div>
     </div>
     <div class="actions-grid">
@@ -88,47 +89,23 @@
 <div id="modal-hist">
     <div class="hist-header">
         <h3 style="margin:0">📜 Histórico de Compras</h3>
-        <button onclick="fecharHist()" style="padding: 8px 15px; border-radius: 5px; border: 1px solid #999; background: #fff; font-weight: bold;">VOLTAR</button>
+        <button onclick="fecharHist()" style="padding: 8px 15px; border-radius: 5px; border: 1px solid #999; background: #fff; font-weight: bold; cursor: pointer;">VOLTAR</button>
     </div>
-    <div id="hist-lista" style="padding: 15px;"></div>
+    <div id="hist-lista" style="padding: 15px; max-width: 600px; margin: auto;"></div>
 </div>
 
 <script>
     let listaItens = [];
     let historicoCompras = JSON.parse(localStorage.getItem('minhasComprasHist')) || [];
 
-    // 1. IMPORTAR LISTA VIA LINK
-    function verificarListaRecebida() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const dadosBase64 = urlParams.get('importar');
-        if (dadosBase64) {
-            if (confirm("Você recebeu uma nova lista de compras! Deseja carregar os itens agora?")) {
-                try {
-                    const dadosDecodificados = JSON.parse(atob(dadosBase64));
-                    listaItens = dadosDecodificados.map(it => {
-                        // Ao importar, limpamos os preços e buscamos o histórico do novo usuário
-                        const ref = buscarPrecoAntigo(it.nome);
-                        return {
-                            id: Date.now() + Math.random(),
-                            nome: it.nome,
-                            preco: "",
-                            dica: ref ? `Antigo: R$ ${parseFloat(ref.preco).toFixed(2).replace('.',',')} (${ref.mercado})` : ""
-                        };
-                    });
-                    renderizar();
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                } catch (e) { alert("Erro ao importar lista."); }
-            }
-        }
-    }
-
-    // 2. BUSCAR PREÇO NO HISTÓRICO LOCAL
+    // BUSCA PREÇO NO HISTÓRICO LOCAL
     function buscarPrecoAntigo(nomeProduto) {
         const termo = nomeProduto.toLowerCase().trim();
         for (let i = historicoCompras.length - 1; i >= 0; i--) {
             const compra = historicoCompras[i];
             for (let j = 0; j < compra.itens.length; j++) {
                 if (compra.itens[j].nome.toLowerCase().trim() === termo) {
+                    // Retorna o preço e o mercado da última vez que esse item foi salvo
                     return { preco: compra.itens[j].preco, mercado: compra.mercado };
                 }
             }
@@ -136,7 +113,33 @@
         return null;
     }
 
-    // 3. ADICIONAR E RENDERIZAR
+    // IMPORTAR LISTA (Agora com busca automática de histórico local)
+    function verificarListaRecebida() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const dadosBase64 = urlParams.get('importar');
+        if (dadosBase64) {
+            if (confirm("Você recebeu uma nova lista de compras! Deseja carregar os itens agora?")) {
+                try {
+                    const dadosDecodificados = JSON.parse(atob(dadosBase64));
+                    
+                    // Aqui está a correção: mapeamos os itens recebidos e já consultamos o histórico local
+                    listaItens = dadosDecodificados.map(it => {
+                        const ref = buscarPrecoAntigo(it.nome); 
+                        return {
+                            id: Date.now() + Math.random(),
+                            nome: it.nome,
+                            preco: "", // Preço começa vazio para o novo usuário preencher
+                            dica: ref ? `Antigo: R$ ${parseFloat(ref.preco).toFixed(2).replace('.',',')} (${ref.mercado})` : ""
+                        };
+                    });
+                    
+                    renderizar();
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } catch (e) { alert("Erro ao carregar a lista enviada."); }
+            }
+        }
+    }
+
     function adicionarItem() {
         const input = document.getElementById('prod-nome');
         const nome = input.value.trim();
@@ -186,9 +189,8 @@
         document.getElementById('total-txt').innerText = "R$ " + total.toFixed(2).replace('.', ',');
     }
 
-    // 4. COMPARTILHAR WHATSAPP
     function enviarWhatsApp() {
-        if (listaItens.length === 0) { alert("Sua lista está vazia!"); return; }
+        if (listaItens.length === 0) { alert("Adicione itens à lista primeiro!"); return; }
         const mercado = document.getElementById('mercado-nome').value.trim() || "Mercado";
         
         let texto = `🛒 *LISTA DE COMPRAS - ${mercado.toUpperCase()}*\n\n`;
@@ -203,13 +205,13 @@
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(texto), '_blank');
     }
 
-    // 5. FINALIZAR E HISTÓRICO
     function finalizarCompra() {
         const mercado = document.getElementById('mercado-nome').value.trim();
-        if(!mercado) { alert("Preencha o nome do mercado!"); return; }
+        if(!mercado) { alert("Por favor, digite o nome do mercado!"); return; }
         if(listaItens.length === 0) { alert("Sua lista está vazia!"); return; }
 
         const total = listaItens.reduce((acc, it) => acc + (parseFloat(it.preco) || 0), 0);
+        
         historicoCompras.push({
             mercado: mercado,
             data: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString().slice(0,5),
@@ -221,32 +223,37 @@
         listaItens = [];
         document.getElementById('mercado-nome').value = "";
         renderizar();
-        alert("Compra finalizada e salva no histórico!");
+        alert("Compra salva com sucesso!");
     }
 
     function abrirHist() {
         document.getElementById('modal-hist').style.display = 'block';
         const container = document.getElementById('hist-lista');
+        
         if (historicoCompras.length === 0) {
-            container.innerHTML = "<p style='text-align:center; color:#999; margin-top:50px;'>Histórico vazio.</p>";
+            container.innerHTML = "<p style='text-align:center; color:#999; margin-top:50px;'>Você ainda não tem compras salvas.</p>";
             return;
         }
 
         let html = '<button class="btn-clear" onclick="limparHistorico()">⚠️ APAGAR TODO O HISTÓRICO</button>';
+        
         for(let i = historicoCompras.length - 1; i >= 0; i--) {
             const c = historicoCompras[i];
             html += `<div class="hist-card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:2px solid #f5f5f5; padding-bottom:5px;">
-                    <strong style="color:var(--secondary);">${c.mercado}</strong>
-                    <span style="color:#888; font-size:11px;">${c.data}</span>
+                <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:2px solid #f5f5f5; padding-bottom:5px;">
+                    <strong style="color:var(--secondary); font-size:1.1em;">${c.mercado}</strong>
+                    <span style="color:#888; font-size:11px; align-self:center;">${c.data}</span>
                 </div>`;
+            
             c.itens.forEach(it => {
+                const p = parseFloat(it.preco || 0).toFixed(2).replace('.', ',');
                 html += `<div class="hist-item-row">
                     <span class="hist-item-name">${it.nome}</span>
-                    <span class="hist-item-price">R$ ${parseFloat(it.preco || 0).toFixed(2).replace('.',',')}</span>
+                    <span class="hist-item-price">R$ ${p}</span>
                 </div>`;
             });
-            html += `<div style="text-align:right; margin-top:10px; padding-top:8px; color:var(--primary); font-weight:bold;">
+
+            html += `<div style="text-align:right; margin-top:12px; padding-top:10px; color:var(--primary); font-size:1.2em; font-weight:bold; border-top: 1px solid #eee;">
                 TOTAL: R$ ${c.total.toFixed(2).replace('.', ',')}
             </div></div>`;
         }
@@ -254,7 +261,7 @@
     }
 
     function fecharHist() { document.getElementById('modal-hist').style.display = 'none'; }
-    function limparHistorico() { if(confirm("Deseja apagar permanentemente todo o histórico?")) { historicoCompras = []; localStorage.removeItem('minhasComprasHist'); abrirHist(); } }
+    function limparHistorico() { if(confirm("Isso apagará todos os preços e mercados salvos. Tem certeza?")) { historicoCompras = []; localStorage.removeItem('minhasComprasHist'); abrirHist(); } }
 </script>
 </body>
 </html>
