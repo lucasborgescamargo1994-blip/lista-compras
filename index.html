@@ -220,29 +220,67 @@
         alert("Compra finalizada!");
     }
 
-    function abrirHist() {
-        document.getElementById('modal-hist').style.display = 'block';
-        const container = document.getElementById('hist-lista');
-        let html = `<a href="LINK_PRO_AQUI" class="btn-go-pro">✨ REMOVER ANÚNCIOS (VERSÃO PRO)</a>`;
-        
-        if (historicoCompras.length === 0) {
-            html += "<p style='text-align:center;'>Nenhuma compra salva.</p>";
-        } else {
-            for(let i = historicoCompras.length - 1; i >= 0; i--) {
-                const c = historicoCompras[i];
-                html += `<div class="card">
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:8px;">
-                        <strong>${c.mercado}</strong><small>${c.data}</small>
-                    </div>`;
-                c.itens.forEach(it => {
-                    html += `<div style="display:flex; justify-content:space-between; font-size:14px;"><span>${it.nome}</span><b>R$ ${parseFloat(it.preco || 0).toFixed(2).replace('.',',')}</b></div>`;
-                });
-                html += `<div style="text-align:right; margin-top:8px; color:var(--primary); font-weight:bold;">TOTAL: R$ ${c.total.toFixed(2).replace('.', ',')}</div></div>`;
-            }
-        }
-        container.innerHTML = html;
-    }
+ function abrirHist() {
+    document.getElementById('modal-hist').style.display = 'block';
+    const container = document.getElementById('hist-lista');
+    
+    // 1. Botão PRO no topo
+    let html = `<a href="LINK_PRO_AQUI" class="btn-go-pro">✨ REMOVER ANÚNCIOS (VERSÃO PRO)</a>`;
+    
+    if (historicoCompras.length === 0) {
+        html += "<p style='text-align:center; color:#999; margin-top:20px;'>Nenhuma compra salva no histórico.</p>";
+    } else {
+        // 2. Botão de Limpar (Aparece apenas se houver histórico)
+        html += `
+            <button onclick="limparHistorico()" style="
+                background: #fff; 
+                color: var(--danger); 
+                border: 1px solid var(--danger); 
+                padding: 10px; 
+                border-radius: 8px; 
+                width: 100%; 
+                margin-bottom: 20px; 
+                font-weight: bold; 
+                cursor: pointer;
+            ">🗑️ APAGAR TODO HISTÓRICO</button>
+        `;
 
+        // 3. Listagem dos Cards
+        for(let i = historicoCompras.length - 1; i >= 0; i--) {
+            const c = historicoCompras[i];
+            html += `
+                <div class="card" style="margin-bottom: 15px; border: 1px solid #eee;">
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:8px;">
+                        <strong>${c.mercado}</strong>
+                        <small style="color:#888;">${c.data}</small>
+                    </div>`;
+            
+            c.itens.forEach(it => {
+                html += `
+                    <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:3px;">
+                        <span>${it.nome}</span>
+                        <b style="color:#555;">R$ ${parseFloat(it.preco || 0).toFixed(2).replace('.',',')}</b>
+                    </div>`;
+            });
+
+            html += `
+                    <div style="text-align:right; margin-top:10px; padding-top:5px; border-top:1px dashed #eee; color:var(--primary); font-weight:bold; font-size:1.1em;">
+                        TOTAL: R$ ${c.total.toFixed(2).replace('.', ',')}
+                    </div>
+                </div>`;
+        }
+    }
+    container.innerHTML = html;
+}
+
+// Certifique-se de que a função de limpar também existe no seu script:
+function limparHistorico() {
+    if(confirm("Tem certeza que deseja apagar permanentemente todo o histórico de compras?")) {
+        historicoCompras = [];
+        localStorage.removeItem('minhasComprasHist');
+        abrirHist(); // Recarrega a tela do histórico
+    }
+}
     function fecharHist() { document.getElementById('modal-hist').style.display = 'none'; }
 </script>
 </body>
